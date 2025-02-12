@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Search Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        .complete {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>Job Search Tracker</h1>
+    
+    <!-- Task Section -->
+    <h2>Tasks</h2>
+    <form action="/add_task" method="POST">
+        <input type="text" name="task" placeholder="Enter a new task" required>
+        <select name="category">
+            <option value="Resume">Resume</option>
+            <option value="Networking">Networking</option>
+            <option value="Applications">Applications</option>
+            <option value="Follow Up">Follow Up</option>
+            <option value="Other">Other</option>
+        </select>
+        <button type="submit">Add Task</button>
+    </form>
+    <ul>
+        {% for task in tasks %}
+        <li class="{% if task[0] == '[X]' %}complete{% endif %}">
+            {{ task[0] }} - {{ task[1] }} - {{ task[2] }}
+            <a href="/complete_task/{{ loop.index0 }}">Complete</a>
+            <a href="/remove_task/{{ loop.index0 }}">Remove</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Job Section -->
+    <h2>Job Applications</h2>
+    <form action="/add_job" method="POST">
+        <input type="text" name="company" placeholder="Company" required>
+        <input type="text" name="position" placeholder="Position" required>
+        <input type="text" name="link" placeholder="Job Link" required>
+        <textarea name="notes" placeholder="Notes"></textarea>
+        <button type="submit">Add Job</button>
+    </form>
+    <ul>
+        {% for job in jobs %}
+        <li>
+            {{ job[0] }} - {{ job[1] }} - {{ job[2] }} - {{ job[4] }}
+            <form action="/mark_job_status/{{ loop.index0 }}" method="POST" style="display:inline;">
+                <select name="status">
+                    <option value="In Progress">In Progress</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+                <button type="submit">Update Status</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Export Data -->
+    <a href="/export_data">Export Data to CSV</a>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
