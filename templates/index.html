@@ -8,25 +8,91 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
         }
         ul {
             list-style-type: none;
             padding: 0;
         }
         li {
-            margin: 10px 0;
+            background: #fff;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
         }
         .complete {
             text-decoration: line-through;
             color: gray;
         }
+        .task-buttons, .job-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .delete-btn {
+            background: #dc3545;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .status-inprogress { color: blue; }
+        .status-accepted { color: green; }
+        .status-rejected { color: red; }
     </style>
+    <script>
+        function completeTask(index) {
+            fetch(`/complete_task/${index}`, { method: 'GET' })
+                .then(() => window.location.reload());
+        }
+
+        function removeTask(index) {
+            fetch(`/remove_task/${index}`, { method: 'GET' })
+                .then(() => window.location.reload());
+        }
+
+        function updateJobStatus(index) {
+            const status = document.getElementById(`job-status-${index}`).value;
+            fetch(`/mark_job_status/${index}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `status=${status}`
+            }).then(() => window.location.reload());
+        }
+    </script>
 </head>
 <body>
-    <h1>Job Search Tracker</h1>
-    
+
+<div class="container">
+    <h1>📌 Job Search Tracker</h1>
+
     <!-- Task Section -->
-    <h2>Tasks</h2>
+    <h2>📝 Tasks</h2>
     <form action="/add_task" method="POST">
         <input type="text" name="task" placeholder="Enter a new task" required>
         <select name="category">
@@ -36,55 +102,60 @@
             <option value="Follow Up">Follow Up</option>
             <option value="Other">Other</option>
         </select>
-        <button type="submit">Add Task</button>
+        <button type="submit">➕ Add Task</button>
     </form>
     <ul>
         {% for task in tasks %}
         <li class="{% if task[0] == '[X]' %}complete{% endif %}">
-            {{ task[0] }} - {{ task[1] }} - {{ task[2] }}
-            <a href="/complete_task/{{ loop.index0 }}">Complete</a>
-            <a href="/remove_task/{{ loop.index0 }}">Remove</a>
+            {{ task[1] }} - {{ task[2] }}
+            <div class="task-buttons">
+                <button onclick="completeTask({{ loop.index0 }})">✅ Complete</button>
+                <button class="delete-btn" onclick="removeTask({{ loop.index0 }})">🗑️ Remove</button>
+            </div>
         </li>
         {% endfor %}
     </ul>
 
     <!-- Job Section -->
-    <h2>Job Applications</h2>
+    <h2>💼 Job Applications</h2>
     <form action="/add_job" method="POST">
         <input type="text" name="company" placeholder="Company" required>
         <input type="text" name="position" placeholder="Position" required>
         <input type="text" name="link" placeholder="Job Link" required>
         <textarea name="notes" placeholder="Notes"></textarea>
-        <button type="submit">Add Job</button>
+        <button type="submit">➕ Add Job</button>
     </form>
+    
     <ul>
         {% for job in jobs %}
         <li>
-            {{ job[0] }} - {{ job[1] }} - {{ job[2] }} - {{ job[4] }}
-            <form action="/mark_job_status/{{ loop.index0 }}" method="POST" style="display:inline;">
-                <select name="status">
-                    <option value="In Progress">In Progress</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Rejected">Rejected</option>
+            <span class="status-{{ job[0] | lower }}">{{ job[0] }}</span> - {{ job[1] }} - {{ job[2] }} - {{ job[4] }}
+            <div class="job-buttons">
+                <select id="job-status-{{ loop.index0 }}">
+                    <option value="In Progress" {% if job[0] == "In Progress" %}selected{% endif %}>In Progress</option>
+                    <option value="Accepted" {% if job[0] == "Accepted" %}selected{% endif %}>Accepted</option>
+                    <option value="Rejected" {% if job[0] == "Rejected" %}selected{% endif %}>Rejected</option>
                 </select>
-                <button type="submit">Update Status</button>
-            </form>
+                <button onclick="updateJobStatus({{ loop.index0 }})">🔄 Update</button>
+            </div>
         </li>
         {% endfor %}
     </ul>
 
     <!-- Export Data -->
-    <a href="/export_data">Export Data to CSV</a>
+    <a href="/export_data">📤 Export Data to CSV</a>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <ul>
             {% for message in messages %}
-                <li>{{ message }}</li>
+                <li><strong>{{ message }}</strong></li>
             {% endfor %}
             </ul>
         {% endif %}
     {% endwith %}
+</div>
+
 </body>
 </html>
